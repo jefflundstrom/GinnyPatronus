@@ -4,6 +4,7 @@
 #include <AutoConnect.h>
 #include <FS.h>
 #include <ArduinoJson.h> 
+#include <ESPmDNS.h>
 
 #define LED_PIN 13
 #define FADE_TIME 3000
@@ -108,6 +109,7 @@ void saveDataToJSON() {
 void setup() {
   delay(1000);
   Serial.begin(115200);
+  
   pinMode(LED_PIN, OUTPUT);
   if (SPIFFS.begin()) readAndParseJSON();
   Config.autoReconnect = true;
@@ -138,9 +140,16 @@ void setup() {
   });
   if (Portal.begin()) Serial.println("WiFi connected: " + WiFi.localIP().toString());
   configTime(-5 * 3600, 0, "north-america.pool.ntp.org");
-}
 
-bool displayOnce = true;
+  if (!MDNS.begin("mywand")) {
+    Serial.println("Error setting up MDNS responder!");
+  } else {
+    Serial.println("MDNS responder started");
+    MDNS.addService("http", "tcp", 80);
+    Serial.println("MDNS service added");
+  }
+
+}
 
 void loop() {
   Portal.handleClient();
@@ -154,27 +163,36 @@ void loop() {
         wd[tm->tm_wday],
         tm->tm_hour, tm->tm_min, tm->tm_sec);
 
-      if (displayOnce) {
-        displayOnce = false;
-      }
-      if (hourlyflash && tm->tm_min == 0) {
-        performPatronus();
-      } else if (useSchedule) {
+      //The schedule trumps the hourly.
+      if (useSchedule) {
         int currentHour = tm->tm_hour;
         int currentMinute = tm->tm_min;
         int currentTime = (currentHour * 100) + currentMinute;
         int ontime = atoi(onTime.c_str());
         int offtime = atoi(offTime.c_str());
+        bool changed = false;
 
         if (currentTime == ontime) {
           performPatronus();
           LEDVALUE = 255;
-        } else if (currentTime == offtime) {
+          changed = true;
+        } 
+        else if (currentTime == offtime) 
+        {
           LEDVALUE = 0;
+          changed = true;
+        }
+
+        if(changed)
+        {
           analogWrite(LED_PIN, LEDVALUE);
+          //Wait 60 seconds as we dont want to keep spamming the change.
           delay(60000);
         }
       }
+      else if (hourlyflash && tm->tm_min == 0) {
+        performPatronus();
+      } 
     }
   }
 }
