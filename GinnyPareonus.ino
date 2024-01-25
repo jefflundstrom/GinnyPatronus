@@ -12,7 +12,7 @@
 
 WebServer Server;
 AutoConnect Portal(Server);
-AutoConnectConfig Config;
+AutoConnectConfig Config("JennysWand", "olivia00");
 AutoConnectAux Timezone;
 static const char *wd[7] = { "Sun","Mon","Tue","Wed","Thr","Fri","Sat" };
 char dateTime[40];
@@ -25,24 +25,41 @@ bool hourlyflash = true, useSchedule = true;
 
 void rootPage() {
   String content =
-    "<html><head><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><script type=\"text/javascript\">"
+    "<!DOCTYPE html><html><head>"
+    "<meta name='viewport' content='width=device-width,initial-scale=1'>"
+    "<title>Ginny Weasley's Patronus</title>"
+    "<style>"
+    "body{background-color:black;color:white;font-family:Arial,sans-serif;margin:0;padding:0;text-align:center;}"
+    ".container{margin:auto;max-width:800px;padding:20px;}"
+    ".time-input{font-size:20px;padding:0;width:200px;height:40px;}"
+    "h1,h3{color:lightgray;margin:10px 0;}"
+    "p{color:white;margin:10px 0;}"
+    "img,iframe{max-width:100%;height:auto;}"
+    "button{margin:10px;padding:10px 20px;font-size:16px;}"
+    "</style>"
+    "<script type='text/javascript'>"
     "function toggleLED(){var xhr=new XMLHttpRequest();xhr.open('GET','/toggleLED',true);xhr.send();}"
     "function setSchedule(){var xhr=new XMLHttpRequest();var onTime=document.getElementById('onTime').value;"
     "var offTime=document.getElementById('offTime').value;var hourlyflash=document.getElementById('patronusHourly').checked;"
     "var useSchedule=document.getElementById('useSchedule').checked;"
-    "xhr.open('GET','/setSchedule?onTime='+onTime+'&offTime='+offTime+'&hourlyflash='+hourlyflash+'&useSchedule='+useSchedule,true);"
-    "xhr.send();}</script><style>body{background-color:black;text-align:center;color:white;}</style>"
-    "<Title>Ginny Weasley's Patronus</Title></head><body><center><img src=\"https://th.bing.com/th/id/OIP.SbXooHPcEGXqwVazyV7-rgHaFD?rs=1&pid=ImgDetMain\">"
-    "<center><p>The words Expecto Patronum translate to \"I expect a guardian,\" in Latin. The patronus is a reminder of hope and love as it comes in the form of the wizard or witch's spirit guardian.</p>"
-    "<p><a href=\"https://en.wikipedia.org/wiki/Ginny_Weasley\" style=\"color:lightgray;\"><h1>Ginny Weasley's</h1></a> Patronus is a Horse. The Horse Patronus symbolizes Ginny's strong will, independence, and free spirit, much like a wild horse. Horses, throughout history and in many cultures, have been symbolic of power, grace, beauty, nobility, strength, and freedom. All of these attributes match Ginny's character as she grows from a shy young girl into a confident, brave, and key player in the fight against Voldemort.</p>"
-    "<center><iframe loading=\"lazy\" width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/eG6ujqx_Mu0\" title=\"YouTube video player\" frameborder=\"0\" allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\" allowfullscreen></iframe></center>"
-    "<h3 align=\"center\" style=\"color:gray;margin:10px;\">{{DateTime}}</h3>"
-    "<button onclick=\"toggleLED()\">Toggle Light</button>"
-    "<p><label for=\"patronusHourly\">Patronus Hourly:</label><input type=\"checkbox\" id=\"patronusHourly\" name=\"patronusHourly\" {{HOURLYCHECK}}></p>"
-    "<p><label for=\"useSchedule\">Use Scheduled Times Below:</label><input type=\"checkbox\" id=\"useSchedule\" name=\"useSchedule\" {{USESCHEDULE}}></p>"
-    "<p>Set On Time: <input type='time' id='onTime' value='{{ONTIME}}'></p>"
-    "<p>Set Off Time: <input type='time' id='offTime' value='{{OFFTIME}}'></p>"
-    "<button onclick=\"setSchedule()\">Set Schedule</button>"
+    "xhr.open('GET','/setSchedule?onTime='+onTime+'&offTime='+offTime+'&hourlyflash='+hourlyflash+'&useSchedule='+useSchedule,true);xhr.send();}"
+    "</script>"
+    "</head><body>"
+    "<div class='container'>"
+    "<img src='https://th.bing.com/th/id/OIP.SbXooHPcEGXqwVazyV7-rgHaFD?rs=1&pid=ImgDetMain' alt='Patronus Image'>"
+    "<p>The words Expecto Patronum translate to 'I expect a guardian,' in Latin. The patronus is a reminder of hope and love as it comes in the form of the wizard or witch's spirit guardian.</p>"
+    "<p><a href='https://en.wikipedia.org/wiki/Ginny_Weasley' style='color:lightgray;'><h1>Ginny Weasley's</h1></a>"
+    "Patronus is a Horse. The Horse Patronus symbolizes Ginny's strong will, independence, and free spirit, much like a wild horse. Horses, throughout history and in many cultures, have been symbolic of power, grace, beauty, nobility, strength, and freedom. All of these attributes match Ginny's character as she grows from a shy young girl into a confident, brave, and key player in the fight against Voldemort.</p>"
+    "<iframe width='500' style='height:282px;' frameborder='0' loading='lazy' src='https://www.youtube.com/embed/eG6ujqx_Mu0' title='YouTube video player' allow='autoplay;' allowfullscreen></iframe>"
+    "<h3>{{DateTime}}</h3>"
+    "<button onclick='toggleLED()'>Toggle Light</button>"
+    "<p><label for='patronusHourly'>Patronus Hourly:</label>"
+    "<input type='checkbox' id='patronusHourly' name='patronusHourly' {{HOURLYCHECK}}></p>"
+    "<p><label for='useSchedule'>Use Scheduled Times Below:</label>"
+    "<input type='checkbox' id='useSchedule' name='useSchedule' {{USESCHEDULE}}></p>"
+    "<p>Set On Time: <input type='time' id='onTime' class='time-input' value='{{ONTIME}}'></p>"
+    "<p>Set Off Time: <input type='time' id='offTime' class='time-input' value='{{OFFTIME}}'></p>"
+    "<button onclick='setSchedule()'>Set Schedule</button>"
     "<p style=\"padding-top:15px;text-align:center\">" AUTOCONNECT_LINK(COG_24) "</p></body></html>";
 
   t = time(NULL);
@@ -111,7 +128,7 @@ void setup() {
   Serial.begin(115200);
   
   pinMode(LED_PIN, OUTPUT);
-  if (SPIFFS.begin()) readAndParseJSON();
+  if (SPIFFS.begin(true)) readAndParseJSON();
   Config.autoReconnect = true;
   Portal.config(Config);
   Server.on("/", rootPage);
